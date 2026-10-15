@@ -1,0 +1,55 @@
+name: Validar laboratório BIND 9
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bind9:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar Compose da raiz e do tutorial
+        run: |
+          docker compose --profile ferramentas config --quiet
+          docker compose -f tutoriais/dns/bind9/docker-compose.yml --profile ferramentas config --quiet
+      - name: Baixar imagens, inclusive o cliente opcional
+        run: docker compose --profile ferramentas pull
+      - name: Verificar configuração e zona
+        run: |
+          docker compose run --rm --no-deps --entrypoint named-checkconf dns-primario -z /etc/bind/named.conf
+          docker compose run --rm --no-deps --entrypoint named-checkconf dns-secundario /etc/bind/named.conf
+          docker compose run --rm --no-deps --entrypoint named-checkzone dns-primario lab.test /etc/bind/zones/db.lab.test
+      - name: Iniciar servidores e aguardar prontidão
+        run: docker compose up -d --wait --wait-timeout 120
+      - name: Verificar consultas, replicação e controle de transferência
+        run: docker compose run --rm --no-deps cliente sh /testes/verificar.sh normal
+      - name: Derrubar o primário e consultar o secundário
+        run: |
+          docker compose stop dns-primario
+          docker compose run --rm --no-deps cliente sh /testes/verificar.sh falha
+      - name: Recriar secundário e verificar persistência sem primário
+        run: |
+          docker compose up -d --no-deps --force-recreate --wait --wait-timeout 120 dns-secundario
+          docker compose run --rm --no-deps cliente sh /testes/verificar.sh falha
+      - name: Recuperar primário
+        run: |
+          docker compose up -d --wait --wait-timeout 120
+          docker compose run --rm --no-deps cliente sh /testes/verificar.sh normal
+      - name: Conferir limpeza da árvore de trabalho
+        run: |
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
+      - name: Registrar estado e logs
+        if: always()
+        run: |
+          docker compose ps --all
+          docker compose logs --no-color --tail=100
+      - name: Limpar ambiente
+        if: always()
+        run: docker compose down --volumes --remove-orphans

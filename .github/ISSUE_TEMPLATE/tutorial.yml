@@ -1,0 +1,33 @@
+name: Reservar tutorial
+description: Identificar o software e o grupo antes da implementação.
+title: "Tutorial: "
+body:
+  - type: markdown
+    attributes:
+      value: "No fork, esta issue serve para organização local. A reserva da turma deve ser aberta no repositório do professor; confira duplicidades antes."
+  - type: input
+    id: software
+    attributes:
+      label: Tema e software
+      placeholder: "Filas / RabbitMQ"
+    validations:
+      required: true
+  - type: textarea
+    id: integrantes
+    attributes:
+      label: Integrantes
+      description: Nomes e usuários GitHub dos 3 a 4 integrantes.
+    validations:
+      required: true
+  - type: textarea
+    id: demonstracao
+    attributes:
+      label: Demonstração proposta
+      description: Problema distribuído, nós/clientes, fluxo normal, falha e recuperação.
+    validations:
+      required: true
+  - type: textarea
+    id: ambiente
+    attributes:
+      label: Ambiente previsto
+      description: Sistemas, arquiteturas, portas, memória e disco estimados.
