@@ -4,9 +4,10 @@ Proposta local para a [issue #2 — Tutorial DNS - Bind 9](https://github.com/jo
 Autor inicial: [guiguichinelo](https://github.com/guiguichinelo), RA 5157832.
 Os demais integrantes e a revisão cruzada devem ser registrados antes da entrega.
 
-**Estado:** arquivos de laboratório e testes preparados; execução Docker,
-consumo medido, ensaio e validação por outro grupo ainda pendentes. As saídas
-abaixo são critérios esperados, não resultados de uma execução certificada.
+**Estado:** homologado em VM Linux AMD64, com fluxo normal, queda do primário,
+persistência do secundário e recuperação aprovados em 15/10/2026. Windows,
+macOS/ARM64, ensaio e revisão cruzada seguem pendentes. As saídas abaixo
+orientam a reprodução; os resultados observados constam no registro de validação.
 Veja o [registro de validação](validacao.md) para os checks locais concluídos.
 
 ## 1. Visão geral
@@ -68,8 +69,8 @@ em domínios de falha diferentes e política de acesso adequada.
 | 127.0.0.1:2053 | secundário:53 | UDP e TCP | Consultar secundário |
 | Não publicada | ambos:953 | TCP | Controle RNDC apenas no loopback interno |
 
-Data de preparação e consulta dos manifests: **14/10/2026**. Teste real em
-Windows, Linux, macOS e revisão cruzada: **pendentes**. A arquitetura é
+Data de preparação e consulta dos manifests: **14/10/2026**. Homologação Linux
+AMD64: **15/10/2026**. Windows, macOS/ARM64 e revisão cruzada: **pendentes**. A arquitetura é
 selecionada pelo Docker; não há `platform: linux/amd64` forçando emulação.
 
 ## 4. Instalação

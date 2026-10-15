@@ -51,6 +51,11 @@ UUID SMBIOS e VM generation ID distintos; confira a configuração antes de
 iniciar. No convidado, confirme machine-id, IP DHCP e fingerprints SSH próprios.
 Não basta renomear a VM no painel após o primeiro boot para mudar o hostname.
 
+Na homologação de 15/10/2026, hostname, DHCP, MAC, machine-id e fingerprints SSH
+próprios foram confirmados no clone. Cloud-init 26.1 concluiu sem erros de
+execução, mas devolveu código 2 por aviso de depreciação do campo `user` gerado
+pelo Proxmox; revisar a compatibilidade antes de atualizar para cloud-init 27.2.
+
 Cada clone completo tem disco independente. O endereço IP DHCP é descoberto
 pelo QEMU Guest Agent ou pelo servidor DHCP; não está fixado no repositório.
 Para distribuir a base fora do laboratório, defina credenciais de acesso

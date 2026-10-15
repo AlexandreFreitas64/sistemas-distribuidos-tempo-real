@@ -76,14 +76,16 @@ contêiner. Retorne a `127.0.0.1` depois. Não altere o DNS do sistema operacion
 
 ## Verificação e limites
 
-A CI fornecida valida o Compose, arquivos BIND e zona; testa consultas UDP/TCP,
+A CI valida o Compose, arquivos BIND e zona; testa consultas UDP/TCP,
 replicação, recusa de AXFR sem chave, falha do primário e persistência do
-secundário após recriação. Ela só rodará quando enviada ao GitHub.
+secundário após recriação. A execução do fork na branch `hml` passou, assim
+como a homologação real em VM Linux AMD64 em 15/10/2026.
 
 Nesta máquina Windows, Docker não foi encontrado e o serviço WSL está desativado.
-Não foram instalados nem habilitados runtimes nesta etapa. Execução real,
-consumo observado, revisão cruzada e ensaios seguem pendentes. Registre versões,
-data e resultados efetivos antes de considerar a entrega validada.
+O runtime local Windows não foi instalado. A homologação foi realizada numa VM
+Ubuntu 26.04.1 LTS, como usuário `administrador` do grupo Docker, sem `sudo`.
+Consulte o [registro de validação](../tutoriais/dns/bind9/validacao.md).
+Windows, macOS/ARM64, revisão cruzada e ensaios de sala seguem pendentes.
 
 Consulte diagnósticos e referências no tutorial. As instruções de colaboração
 ficam em [colaboracao.md](colaboracao.md).
