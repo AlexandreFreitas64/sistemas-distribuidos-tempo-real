@@ -1,6 +1,6 @@
-Coloque seu usuario do Github e RA
-Github       RA
+Coloque seu usuario do Github e RA\
+Github       RA\
 
-rafaelh4mu 5161826
-cleciobf 5183432
+rafaelh4mu 5161826\
+cleciobf 5183432\
 
