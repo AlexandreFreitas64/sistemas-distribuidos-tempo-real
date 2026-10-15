@@ -54,7 +54,7 @@ leitura impedia criar os destinos aninhados `shared` e `zones`. O Compose passou
 a montar somente o arquivo `named.conf`; a CI e o laboratório real passaram.
 Logs e dados identificadores do ambiente permanecem em `temp/`, fora do Git.
 
-## Verificações pendentes
+## Pendências registradas na topologia anterior
 
 - Consultar a partir do notebook de um colega na LAN; loopback foi testado.
 - Reproduzir limpeza completa e nova subida na VM; a CI executou sua limpeza final.
@@ -64,3 +64,36 @@ Logs e dados identificadores do ambiente permanecem em `temp/`, fora do Git.
 
 Na máquina Windows de desenvolvimento, Docker não estava no PATH e o serviço
 WSL estava desativado; por isso a execução real foi feita na VM Linux.
+
+## Homologação distribuída em duas VMs — 15/10/2026
+
+A topologia anterior foi substituída no commit `b4f9676` da branch `hml` do
+fork. O node-1 executa somente o primário e o node-2 somente o secundário.
+Cada VM possui uma interface na mesma LAN, IP/MAC/machine-id próprios e disco
+independente. Ambas estão no mesmo host Proxmox: o teste demonstra tolerância
+à falha de VM, não à falha desse host físico.
+
+| Verificação | Resultado observado |
+| --- | --- |
+| Recuperação preventiva | Snapshot do node-1 criado antes da migração |
+| Migração | Dupla antiga removida do node-1; novo node-2 clonado do template e iniciado |
+| Atualização e usuário | Ambos em `hml`, Docker como `administrador` sem sudo |
+| Quantidade de servidores | Um `dns` saudável por VM; configurador termina com código zero |
+| Configuração | Compose da raiz e `named-checkconf` aprovados; zona primária carregada com serial `2026101501` |
+| Replicação | Logs do secundário confirmam transferência pela LAN com TSIG e serial `2026101501` |
+| Consultas | A por UDP/TCP, CNAME, SRV, NS, NXDOMAIN autoritativo e SOA iguais aprovados |
+| Acesso externo às VMs | Windows na LAN consultou os dois IPs diretamente, inclusive por TCP, na porta 53 |
+| Transferência sem autenticação | AXFR sem chave recusado |
+| Falha de nó | VM primária desligada graciosamente; Proxmox confirmou `stopped`; teste `falha` no secundário aprovado |
+| Cliente durante a falha | Consulta TCP do Windows ao secundário respondeu `192.0.2.80` |
+| Recuperação | VM primária religada; teste `normal` aprovado novamente; ambos deixados ligados |
+| CI por papel | [Execução 38678228812](https://github.com/guiguichinelo/sistemas-distribuidos-tempo-real/actions/runs/38678228812) aprovada para primário e secundário em runners separados |
+
+O secundário recebeu a zona pela rede, sem montagem do arquivo de zona do
+primário. Os endereços de ambos no SOA/NS foram conferidos pelos testes. Os IPs,
+VMIDs, logs completos e inventário permanecem em `temp/`, ignorada pelo Git.
+A validação automática por papel não substitui o teste real entre VMs.
+
+Continuam pendentes: execução dos servidores em Docker Desktop Windows/macOS,
+revisão por colega, ensaio de 15 minutos, medições de pico e tolerância à falha
+do host físico. O Windows foi validado como cliente DNS externo nesta etapa.
