@@ -97,3 +97,35 @@ A validação automática por papel não substitui o teste real entre VMs.
 Continuam pendentes: execução dos servidores em Docker Desktop Windows/macOS,
 revisão por colega, ensaio de 15 minutos, medições de pico e tolerância à falha
 do host físico. O Windows foi validado como cliente DNS externo nesta etapa.
+
+## Revalidação com hosts físicos distintos — 15/10/2026
+
+O secundário foi migrado para outro host Proxmox. A localização das duas VMs
+foi confirmada pela API e pelo painel do hipervisor. Esta etapa substitui a
+limitação anterior de hospedar as duas VMs na mesma máquina física: o primário
+e o secundário agora estão em hosts distintos, mantendo uma interface por VM
+na mesma LAN e um BIND por nó.
+
+| Verificação repetida | Resultado observado |
+| --- | --- |
+| Ambiente e configuração | Dois servidores saudáveis; Docker como `administrador`, sem sudo |
+| Consultas | A por UDP/TCP, CNAME, SRV, NS, SOA e NXDOMAIN autoritativo aprovados |
+| Transferência após migração | `rndc retransfer lab.test` executado no secundário; TSIG e serial `2026101501` confirmados nos logs atuais |
+| Transferência sem autenticação | AXFR sem chave recusado |
+| Cliente externo | Windows consultou os dois servidores na LAN, inclusive por TCP |
+| Falha da VM primária | VM desligada e estado `stopped` confirmado; secundário no outro host continuou atendendo |
+| Persistência durante a falha | Contêiner secundário recriado com o primário desligado; zona preservada e teste `falha` aprovado |
+| Recuperação | Primário religado; teste `normal` aprovado; ambos deixados ligados e saudáveis |
+
+Na migração, a VM secundária inicialmente recebeu endereço de outra rede.
+Após a correção da interface no hipervisor, foi renovado o DHCP e recriado o
+laboratório Docker, preservando volumes, para restabelecer a publicação DNS.
+Os testes acima foram executados depois dessa recuperação.
+
+As [dez capturas](imagens/README.md) mostram as execuções reais e a separação
+entre hosts. Os prints do painel Proxmox foram recortados para excluir outras
+VMs, SDN e armazenamentos. Credenciais e registros privados permanecem fora do Git.
+
+O ensaio desligou a VM primária, não o host físico. A separação entre hospedeiros
+foi comprovada; a execução em Docker Desktop Windows/macOS e a revisão cruzada
+por outro grupo continuam pendentes.
