@@ -53,8 +53,9 @@ Windows/macOS exigem Docker Desktop e validação do firewall local.
 
 ## 4. Instalação
 
-Clone o fork em cada nó. Na raiz, copie `.env.example` para `.env` (`cp` no
-Linux/macOS, `Copy-Item` no PowerShell). Edite com os endereços reais.
+Obtenha uma cópia deste repositório em cada nó. Na raiz, copie `.env.example`
+para `.env` (`cp` no Linux/macOS, `Copy-Item` no PowerShell).
+Edite com os endereços reais.
 Os IPs abaixo são exemplos fictícios, não endereços para usar sem alteração:
 
 | Variável | node-1 | node-2 |

@@ -1,19 +1,17 @@
 # sistemas-distribuidos-tempo-real
 Site da disciplina de Sistemas Distribuídos e de Tempo Real
 
-## Desenvolvimento e colaboração
+## Laboratório DNS — BIND 9
 
 O primeiro laboratório é o **BIND 9**, referente à
-[issue #2 do professor](https://github.com/joaoepj2/sistemas-distribuidos-tempo-real/issues/2).
+[issue #2](https://github.com/joaoepj2/sistemas-distribuidos-tempo-real/issues/2).
 Com Docker e Compose >= 2.20 instalados em **dois nós**, configure o `.env`
 com os IPs da LAN e o papel de cada nó conforme o tutorial. Execute
 `docker compose up -d` em cada máquina: um BIND primário no node-1 e um BIND
 secundário no node-2, publicados por padrão em TCP/UDP 53 no IP de cada VM.
 Cada nó precisa de apenas uma interface na mesma rede. O cliente de consultas
-roda sob demanda. O ambiente Docker não executa MkDocs.
+roda sob demanda.
 
-- [Ambiente Docker: instalação, verificação e limpeza](docs/ambiente.md)
-- [Fluxo de colaboração pelo fork](docs/colaboracao.md)
 - [Modelo para novos tutoriais](templates/tutorial/README.md)
 - [Tutoriais da turma](tutoriais/README.md)
 - [Tutorial BIND 9: configuração, consultas e falha do primário](tutoriais/dns/bind9/README.md)
