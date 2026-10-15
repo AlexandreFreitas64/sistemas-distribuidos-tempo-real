@@ -21,7 +21,7 @@ services:
       - "${DNS_BIND_ADDRESS:-127.0.0.1}:${DNS_PRIMARY_PORT:-1053}:53/udp"
       - "${DNS_BIND_ADDRESS:-127.0.0.1}:${DNS_PRIMARY_PORT:-1053}:53/tcp"
     volumes:
-      - ./config/primario:/etc/bind:ro
+      - ./config/primario/named.conf:/etc/bind/named.conf:ro
       - ./config/shared:/etc/bind/shared:ro
       - ./zones:/etc/bind/zones:ro
       - primario-cache:/var/cache/bind
@@ -36,7 +36,7 @@ services:
       - "${DNS_BIND_ADDRESS:-127.0.0.1}:${DNS_SECONDARY_PORT:-2053}:53/udp"
       - "${DNS_BIND_ADDRESS:-127.0.0.1}:${DNS_SECONDARY_PORT:-2053}:53/tcp"
     volumes:
-      - ./config/secundario:/etc/bind:ro
+      - ./config/secundario/named.conf:/etc/bind/named.conf:ro
       - ./config/shared:/etc/bind/shared:ro
       - secundario-cache:/var/cache/bind
       - secundario-dados:/var/lib/bind

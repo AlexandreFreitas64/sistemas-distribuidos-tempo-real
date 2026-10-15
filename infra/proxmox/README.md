@@ -15,7 +15,16 @@ modo `660`. O grupo Docker concede administração do daemon, conforme a
 4. No Proxmox, substituir a mídia de instalação pelo disco Cloud-Init, configurar
    `ciuser=administrador` e `ipconfig0=ip=dhcp` e manter boot pelo disco do sistema.
 5. Como root dentro da base, executar `preparar-template.sh` deste diretório.
-6. Desligar graciosamente, aguardar estado parado e converter em template.
+6. Desligar graciosamente e aguardar estado parado. O Proxmox não converte VMs
+   que contenham snapshots: preserve uma recuperação independente e verificada
+   antes de remover os snapshots da base e convertê-la em template.
+
+No ambiente ZFS validado, o clone direto de snapshot foi impedido pelo disco EFI
+e o rollback para um snapshot antigo foi impedido por outro mais recente.
+A recuperação original foi preservada por exportação nativa `zfs send` dos dois
+discos e da configuração, com conferência dos streams e SHA256, em diretório
+privado no armazenamento do host. Detalhes e caminhos reais ficam em `temp/`.
+Não remover snapshots sem um backup independente confirmado.
 
 O script remove a configuração de rede vinculada ao MAC do instalador, habilita
 NoCloud e limpa o estado cloud-init/machine-id. Não instala pacotes nem inicia
@@ -30,7 +39,7 @@ No host Proxmox que contém o template, escolha um VMID livre em todo o cluster
 ```sh
 pvesh get /cluster/nextid --vmid <VMID_LIVRE>
 qm clone <VMID_TEMPLATE> <VMID_LIVRE> --name node-2 --full 1
-qm set <VMID_LIVRE> --ciuser administrador --ipconfig0 ip=dhcp
+qm set <VMID_LIVRE> --ciuser administrador --ipconfig0 ip=dhcp --ciupgrade 0
 qm cloudinit update <VMID_LIVRE>
 qm config <VMID_LIVRE>
 qm start <VMID_LIVRE>

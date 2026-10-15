@@ -254,6 +254,7 @@ Os cenários abaixo são diagnósticos previstos, ainda não incidentes reproduz
 
 | Sintoma | Verificação e correção |
 | --- | --- |
+| Falha ao montar `shared` em filesystem somente leitura | Montar somente `named.conf`, preservando montagens irmãs de `shared` e `zones`; a primeira execução de CI revelou o problema e o Compose foi corrigido |
 | `include` não reconhecido | Atualize Compose para >= 2.20 |
 | Porta ocupada | Ajuste as portas no `.env` da pasta usada e recrie os serviços |
 | Sub-rede sobreposta | Ajuste rede, IPs, configurações, zona e teste conforme seção 5 |
