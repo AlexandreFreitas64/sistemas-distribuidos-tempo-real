@@ -80,8 +80,9 @@ Confira a configuração com os comandos do [guia de ambiente](ambiente.md).
 Execute as verificações funcionais, falha, recuperação e limpeza do tutorial.
 A CI verifica os papéis BIND em runners separados; comunicação entre VMs e
 falha de VM exigem homologação real. Novos middlewares precisarão de
-validações próprias. A branch `hml` do fork é usada para homologação nas VMs.
-O envio ao repositório do professor continua sendo uma etapa separada, por PR.
+validações próprias. Registre os resultados relevantes à reprodução do tutorial,
+mantendo inventários e procedimentos pessoais fora da contribuição.
+O envio ao repositório do professor ocorre por PR.
 
 ```text
 git diff --check

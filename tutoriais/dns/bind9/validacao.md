@@ -1,131 +1,128 @@
-# Registro de validação
+# Verificação do laboratório BIND 9
 
-Os resultados iniciais abaixo descrevem a topologia histórica de dois BIND na
-mesma VM. Ela foi substituída por um BIND por VM; os resultados distribuídos
-estão registrados ao final deste documento.
+Este roteiro descreve como conferir configuração, consultas, replicação e
+recuperação. Execute-o no seu laboratório e registre separadamente os resultados
+obtidos; os comandos abaixo não representam uma execução automática já concluída.
 
-## Preparação inicial — 14/10/2026
+## Preparação e configuração
 
-Preparação inicial na branch `tutorial/bind9`, promovida à branch `hml` do fork
-para homologação em VM Linux. O PR de identificação de usuários é independente.
-Este registro lista as verificações iniciais; resultados de execução são
-acrescentados após validação real. Dados privados do ambiente ficam em `temp/`.
+Configure o `.env` em cada nó conforme o [tutorial](README.md), com IPs reais,
+distintos e estáveis. O primário e o secundário devem se alcançar por TCP/UDP
+na porta definida em `DNS_PORT`. Execute os comandos sempre na mesma pasta
+usada para iniciar o Compose: a raiz do projeto ou a pasta do tutorial.
 
-## Verificações concluídas
+Em cada nó:
 
-| Verificação | Ferramenta | Resultado |
-| --- | --- | --- |
-| Compose da raiz e do tutorial | Compose oficial 2.39.4 para Windows, sem daemon | Configuração válida, incluindo perfil `ferramentas` |
-| Montagens após expansão de `include` | Saída JSON do Compose | Fontes existem e são somente leitura |
-| Isolamento e parâmetros | Saída JSON do Compose | Dois DNS padrão, cliente opcional, quatro volumes e portas substituíveis por variáveis |
-| Zona `lab.test` | Python 3.10.11 e dnspython 2.8.0 temporário | Parse e registros A, CNAME, SRV, SOA e dois NS aprovados |
-| Script de testes | Git Bash, `bash -n` | Sintaxe aprovada; testes funcionais não executados |
-| Imagens | API pública do Docker Hub e manifests OCI | Digests selecionados existem e oferecem AMD64/ARM64 |
-| Higiene | `git diff --check` | Sem erros de whitespace nas alterações rastreadas |
+```sh
+docker compose --profile ferramentas config --quiet
+docker compose --profile ferramentas pull
+docker compose up -d --wait --wait-timeout 120
+docker compose ps -a
+docker compose exec -T dns named-checkconf /etc/bind/named.conf
+docker compose exec -T dns rndc -c /etc/bind/shared/rndc.conf status
+```
 
-O binário Compose temporário foi conferido com o SHA256 publicado na release
-oficial. Ele permite validar o modelo sem instalar Docker Engine. O parser da
-zona não substitui `named-checkzone`, e a validação Compose não inicia serviços.
-Ferramentas temporárias ficaram em `.cache/`, ignorada pelo Git, e foram removidas
-ao concluir a validação; não houve instalação global de dependências DNS.
+Resultado esperado: um serviço `dns` saudável por nó e um `configurador`
+finalizado com código zero. `named-checkconf` deve encerrar sem erros; `rndc`
+deve informar que o servidor está funcionando. O cliente é iniciado sob demanda.
 
-## Homologação Linux AMD64 — 15/10/2026
+Somente no primário, confira também o arquivo de zona:
 
-Ambiente: VM Ubuntu 26.04.1 LTS; Docker Engine 29.9.1; Compose 5.6.0;
-BIND efetivo `9.20.24-1ubuntu0.3-Ubuntu`. Comandos Docker executados como
-`administrador`, integrante do grupo `docker`, sem `sudo`.
+```sh
+docker compose exec -T dns named-checkzone lab.test /etc/bind/zones/db.lab.test
+```
 
-| Verificação | Resultado observado |
-| --- | --- |
-| Atualização do fork | `git pull --ff-only origin hml` aplicou o commit de correção `452bcbd` |
-| Configuração BIND e zona | `named-checkconf` em ambos e `named-checkzone` aprovados |
-| Prontidão | Dois contêineres `healthy` |
-| Consultas e replicação | A por UDP/TCP, CNAME, SRV, NS, NXDOMAIN autoritativo e SOA iguais aprovados |
-| Transferência sem autenticação | AXFR do cliente sem chave recusado |
-| Queda do primário | Secundário continuou respondendo; teste `falha` aprovado |
-| Persistência | Secundário recriado com primário parado e teste `falha` novamente aprovado |
-| Recuperação | Primário reiniciado; teste `normal` aprovado; ambos deixados saudáveis |
-| Portas publicadas | 1053/2053 por UDP e TCP consultadas via loopback da VM, com cliente temporário em rede host |
-| Memória | Amostra inicial: primário 16,01 MiB e secundário 7,68 MiB; não representa pico nem consumo total do host |
-| CI no fork | [Execução 38675418774](https://github.com/guiguichinelo/sistemas-distribuidos-tempo-real/actions/runs/38675418774) aprovada |
+Resultado esperado: zona carregada com o serial configurado e mensagem `OK`.
 
-A primeira execução de CI revelou que montar `/etc/bind` inteiro como somente
-leitura impedia criar os destinos aninhados `shared` e `zones`. O Compose passou
-a montar somente o arquivo `named.conf`; a CI e o laboratório real passaram.
-Logs e dados identificadores do ambiente permanecem em `temp/`, fora do Git.
+## Consultas e replicação
 
-## Pendências registradas na topologia anterior
+Com os dois nós ligados, execute em qualquer um:
 
-- Consultar a partir do notebook de um colega na LAN; loopback foi testado.
-- Reproduzir limpeza completa e nova subida na VM; a CI executou sua limpeza final.
-- Observar encaminhamento/cache com internet e funcionamento local sem internet.
-- Medir picos de memória/disco, ensaiar os 15 minutos e preparar a gravação do plano B.
-- Executar em Windows e macOS/Apple Silicon; obter revisão cruzada.
+```sh
+docker compose run --rm --no-deps cliente sh /testes/verificar.sh normal
+```
 
-Na máquina Windows de desenvolvimento, Docker não estava no PATH e o serviço
-WSL estava desativado; por isso a execução real foi feita na VM Linux.
+O teste deve encerrar com código zero e confirmar:
 
-## Homologação distribuída em duas VMs — 15/10/2026
+- Registro A de `app.lab.test` igual a `192.0.2.80`, endereço fictício do exercício,
+  por UDP e TCP em ambos os servidores.
+- Registros CNAME, SRV e NS conforme a zona de exemplo.
+- Resposta `NXDOMAIN` autoritativa para um nome inexistente.
+- SOA igual nos dois nós e endereços de `ns1` e `ns2` correspondentes ao `.env`.
+- Recusa de transferência AXFR solicitada sem chave.
 
-A topologia anterior foi substituída no commit `b4f9676` da branch `hml` do
-fork. O node-1 executa somente o primário e o node-2 somente o secundário.
-Cada VM possui uma interface na mesma LAN, IP/MAC/machine-id próprios e disco
-independente. Ambas estão no mesmo host Proxmox: o teste demonstra tolerância
-à falha de VM, não à falha desse host físico.
+Para solicitar uma nova transferência e conferir a autenticação, no secundário:
 
-| Verificação | Resultado observado |
-| --- | --- |
-| Recuperação preventiva | Snapshot do node-1 criado antes da migração |
-| Migração | Dupla antiga removida do node-1; novo node-2 clonado do template e iniciado |
-| Atualização e usuário | Ambos em `hml`, Docker como `administrador` sem sudo |
-| Quantidade de servidores | Um `dns` saudável por VM; configurador termina com código zero |
-| Configuração | Compose da raiz e `named-checkconf` aprovados; zona primária carregada com serial `2026101501` |
-| Replicação | Logs do secundário confirmam transferência pela LAN com TSIG e serial `2026101501` |
-| Consultas | A por UDP/TCP, CNAME, SRV, NS, NXDOMAIN autoritativo e SOA iguais aprovados |
-| Acesso externo às VMs | Windows na LAN consultou os dois IPs diretamente, inclusive por TCP, na porta 53 |
-| Transferência sem autenticação | AXFR sem chave recusado |
-| Falha de nó | VM primária desligada graciosamente; Proxmox confirmou `stopped`; teste `falha` no secundário aprovado |
-| Cliente durante a falha | Consulta TCP do Windows ao secundário respondeu `192.0.2.80` |
-| Recuperação | VM primária religada; teste `normal` aprovado novamente; ambos deixados ligados |
-| CI por papel | [Execução 38678228812](https://github.com/guiguichinelo/sistemas-distribuidos-tempo-real/actions/runs/38678228812) aprovada para primário e secundário em runners separados |
+```sh
+docker compose exec -T dns rndc -c /etc/bind/shared/rndc.conf retransfer lab.test
+docker compose logs --tail=80 dns
+```
 
-O secundário recebeu a zona pela rede, sem montagem do arquivo de zona do
-primário. Os endereços de ambos no SOA/NS foram conferidos pelos testes. Os IPs,
-VMIDs, logs completos e inventário permanecem em `temp/`, ignorada pelo Git.
-A validação automática por papel não substitui o teste real entre VMs.
+Aguarde a conclusão da transferência. Os logs devem indicar o primário
+configurado, a chave TSIG `lab-transfer`, o serial recebido e o sucesso da
+operação. Repita `normal` para conferir novamente as respostas dos dois nós.
 
-Continuam pendentes: execução dos servidores em Docker Desktop Windows/macOS,
-revisão por colega, ensaio de 15 minutos, medições de pico e tolerância à falha
-do host físico. O Windows foi validado como cliente DNS externo nesta etapa.
+## Falha do primário
 
-## Revalidação com hosts físicos distintos — 15/10/2026
+Desligue somente a VM ou máquina do primário, mantendo o secundário e o cliente
+disponíveis. Em um laboratório virtual, use o hipervisor escolhido.
+No secundário:
 
-O secundário foi migrado para outro host Proxmox. A localização das duas VMs
-foi confirmada pela API e pelo painel do hipervisor. Esta etapa substitui a
-limitação anterior de hospedar as duas VMs na mesma máquina física: o primário
-e o secundário agora estão em hosts distintos, mantendo uma interface por VM
-na mesma LAN e um BIND por nó.
+```sh
+docker compose run --rm --no-deps cliente sh /testes/verificar.sh falha
+```
 
-| Verificação repetida | Resultado observado |
-| --- | --- |
-| Ambiente e configuração | Dois servidores saudáveis; Docker como `administrador`, sem sudo |
-| Consultas | A por UDP/TCP, CNAME, SRV, NS, SOA e NXDOMAIN autoritativo aprovados |
-| Transferência após migração | `rndc retransfer lab.test` executado no secundário; TSIG e serial `2026101501` confirmados nos logs atuais |
-| Transferência sem autenticação | AXFR sem chave recusado |
-| Cliente externo | Windows consultou os dois servidores na LAN, inclusive por TCP |
-| Falha da VM primária | VM desligada e estado `stopped` confirmado; secundário no outro host continuou atendendo |
-| Persistência durante a falha | Contêiner secundário recriado com o primário desligado; zona preservada e teste `falha` aprovado |
-| Recuperação | Primário religado; teste `normal` aprovado; ambos deixados ligados e saudáveis |
+Resultado esperado: o primário não responde, mas o secundário atende por UDP/TCP
+com a zona recebida. O teste deve encerrar com código zero.
 
-Na migração, a VM secundária inicialmente recebeu endereço de outra rede.
-Após a correção da interface no hipervisor, foi renovado o DHCP e recriado o
-laboratório Docker, preservando volumes, para restabelecer a publicação DNS.
-Os testes acima foram executados depois dessa recuperação.
+Como alternativa, `docker compose stop dns` no primário permite testar a falha
+do serviço. Identifique qual falha foi provocada: parar um contêiner não equivale
+a desligar o nó. Para demonstrar isolamento entre hospedeiros, distribua as VMs
+por máquinas físicas diferentes.
 
-As [dez capturas](imagens/README.md) mostram as execuções reais e a separação
-entre hosts. Os prints do painel Proxmox foram recortados para excluir outras
-VMs, SDN e armazenamentos. Credenciais e registros privados permanecem fora do Git.
+## Persistência do secundário
 
-O ensaio desligou a VM primária, não o host físico. A separação entre hospedeiros
-foi comprovada; a execução em Docker Desktop Windows/macOS e a revisão cruzada
-por outro grupo continuam pendentes.
+Com o primário ainda indisponível, recrie somente o contêiner DNS do secundário:
+
+```sh
+docker compose up -d --no-deps --force-recreate --wait --wait-timeout 120 dns
+docker compose run --rm --no-deps cliente sh /testes/verificar.sh falha
+```
+
+Resultado esperado: o secundário utiliza a zona armazenada no volume e continua
+respondendo. Não remova volumes durante esse teste. A cópia permanece válida
+até o prazo de expiração definido no SOA; execute o ensaio dentro desse prazo.
+
+## Recuperação e encerramento
+
+Religue o nó primário. Se apenas o serviço tiver sido parado, inicie-o novamente.
+No primário:
+
+```sh
+docker compose up -d --wait --wait-timeout 120
+```
+
+Em qualquer nó, repita `normal`. Confira também `docker compose ps -a` em ambos.
+Resultado esperado: os dois servidores saudáveis, serial igual e todas as
+consultas aprovadas.
+
+Para encerrar preservando os dados, execute em cada nó:
+
+```sh
+docker compose down
+```
+
+Para descartar os dados deste laboratório, use
+`docker compose down --volumes --remove-orphans`. A remoção dos volumes apaga
+a zona recebida e o cache; preserve os dados necessários antes da limpeza.
+
+## Registro da execução e CI
+
+Registre data, versões efetivamente utilizadas, arquitetura, tipo de falha
+provocada, resultados e limitações. Inventários, credenciais e procedimentos
+operacionais particulares devem permanecer fora da contribuição pública.
+
+A CI confere o Compose da raiz e do tutorial, gera as configurações, valida
+o BIND e inicia cada papel em um runner separado. No primário, também consulta
+a zona local. A CI não estabelece comunicação entre esses runners e não
+substitui os ensaios de replicação, falha, persistência e recuperação acima.

@@ -17,7 +17,6 @@ roda sob demanda. O ambiente Docker não executa MkDocs.
 - [Modelo para novos tutoriais](templates/tutorial/README.md)
 - [Tutoriais da turma](tutoriais/README.md)
 - [Tutorial BIND 9: configuração, consultas e falha do primário](tutoriais/dns/bind9/README.md)
-- [Nós Proxmox, template e branch de homologação hml](infra/proxmox/README.md)
 
 As diretrizes acadêmicas abaixo orientam a preparação e a entrega dos tutoriais.
 

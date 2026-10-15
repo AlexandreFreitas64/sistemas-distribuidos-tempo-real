@@ -37,7 +37,7 @@ de VM; para tolerar falha do host físico, distribua-as por hosts diferentes.
 Duas máquinas com IPs distintos e estáveis, Docker e Compose >= 2.20.
 Reserve cerca de 512 MiB de memória e 2 GiB de disco para o laboratório em cada
 nó, além do sistema operacional. Imagens estão fixadas por tag e digest no
-Compose. Homologação: Ubuntu 26.04.1, Docker 29.9.1, Compose 5.6.0.
+Compose. O usuário que executa os comandos precisa ter acesso ao Docker.
 Para DHCP, configure reservas; mudança de IP exige atualizar os dois `.env`.
 
 | Porta na LAN | Uso |
@@ -132,8 +132,9 @@ docker compose run --rm --no-deps cliente sh /testes/verificar.sh falha
 Espera-se ausência de resposta do primário e consultas bem-sucedidas ao
 secundário. Religue a VM primária e repita `normal`. O secundário serve a cópia
 até o prazo de expiração do SOA, não indefinidamente sem contato com o primário.
-Resultados reais ficam no [registro de validação](validacao.md); a CI valida
-os papéis em runners separados, sem simular a comunicação entre as duas VMs.
+O [procedimento de verificação](validacao.md) detalha os comandos e resultados
+esperados. A CI valida os papéis em runners separados; a comunicação entre nós
+e os testes de falha precisam ser executados no laboratório distribuído.
 
 ## 8. Problemas comuns
 
@@ -144,10 +145,6 @@ os papéis em runners separados, sem simular a comunicação entre as duas VMs.
 | Secundário saudável, mas SERVFAIL | Conferir IPs, TCP/UDP, chave e logs; esperar primeira transferência |
 | Zona não atualiza | Incrementar serial e recriar; conferir NOTIFY e conexão ao primário |
 | Erro de montagem somente leitura | Manter um volume completo em `/etc/bind`, sem montagens aninhadas |
-| Contêineres antigos primario/secundario | Na versão antiga, executar `docker compose down --volumes --remove-orphans` antes de atualizar |
-
-A última limpeza descarta os volumes do laboratório antigo; preserve o que
-precisar antes. Erros observados na homologação estão em `validacao.md`.
 
 ## 9. Limpeza
 
@@ -163,4 +160,4 @@ Não execute `docker system prune` para limpar este projeto.
 - [Docker Compose](https://docs.docker.com/compose/)
 - [Publicação de portas Docker](https://docs.docker.com/engine/network/port-publishing/)
 
-Imagens e versões efetivamente executadas estão no registro de validação.
+As versões de imagem e seus digests estão fixados no Compose do laboratório.

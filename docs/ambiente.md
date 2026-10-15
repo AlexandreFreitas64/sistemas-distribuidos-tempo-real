@@ -7,8 +7,8 @@ Não é necessário adicionar interfaces, VLANs ou configurar macvlan.
 Instale Docker Engine com Compose >= 2.20 no Linux, ou Docker Desktop com
 contêineres Linux no Windows/macOS. Os comandos Compose são iguais nos três
 sistemas; os testes rodam em contêiner, sem instalar ferramentas DNS no host.
-A execução distribuída foi homologada em duas VMs Linux; Windows e macOS
-precisam de validação de publicação de portas e firewall no ambiente utilizado.
+Confira a publicação de portas e o firewall no sistema utilizado. Os requisitos
+e procedimentos de teste estão no tutorial de cada middleware.
 
 1. Clone o fork em cada máquina e selecione a branch de trabalho.
 2. Copie `.env.example` para `.env` na raiz em cada máquina.
