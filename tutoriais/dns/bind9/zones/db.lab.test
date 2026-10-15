@@ -1,7 +1,7 @@
 $ORIGIN lab.test.
 $TTL 30
 @ IN SOA ns1.lab.test. hostmaster.lab.test. (
-    2026101401 ; serial: incrementar a cada alteração
+    2026101501 ; serial: incrementar a cada alteração
     30         ; refresh: consultar o primário a cada 30 segundos
     10         ; retry: repetir após erro em 10 segundos
     3600       ; expire: parar de servir a cópia após 1 hora sem atualização
@@ -9,8 +9,8 @@ $TTL 30
 )
 @     IN NS    ns1.lab.test.
 @     IN NS    ns2.lab.test.
-ns1   IN A     172.30.53.10
-ns2   IN A     172.30.53.11
+ns1   IN A     @DNS_PRIMARY_IP@
+ns2   IN A     @DNS_SECONDARY_IP@
 ; Endereços TEST-NET fictícios: o laboratório demonstra DNS, não um site HTTP.
 app   IN A     192.0.2.80
 api   IN A     192.0.2.81

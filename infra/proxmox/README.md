@@ -67,15 +67,19 @@ apropriadas aos destinatários antes da distribuição.
 cd /home/administrador/sistemas-distribuidos-tempo-real
 git switch hml
 git pull --ff-only origin hml
+# Copiar .env.example para .env e definir papel, IPs LAN e rede de clientes.
+# node-1: primario; node-2: secundario. Ver tutorial BIND para todos os campos.
 docker compose config --quiet
 docker compose --profile ferramentas pull
 docker compose up -d --wait --wait-timeout 120
 docker compose run --rm --no-deps cliente sh /testes/verificar.sh normal
 ```
 
-Para uma VM na rede da aula, o Compose continua publicado somente no loopback
-por padrão. Consultas entre contêineres funcionam pelo cliente do laboratório;
-para consultas diretas de colegas, configure o `.env` conforme o tutorial BIND.
+Cada nó executa apenas um BIND, publicado no IP LAN definido no `.env`.
+Uma interface por VM na mesma rede é suficiente: transferências usam o IP
+LAN do outro nó. Inicie os dois antes de executar o teste `normal`.
+Confira o [tutorial BIND](../../tutoriais/dns/bind9/README.md) e use reservas
+DHCP ou IPs estáveis. Não copie login pessoal do GitHub para outros clones.
 
 ## Evidências e recuperação
 

@@ -1,4 +1,10 @@
-# Registro de validação — 14/10/2026
+# Registro de validação
+
+Os resultados iniciais abaixo descrevem a topologia histórica de dois BIND na
+mesma VM. Ela foi substituída por um BIND por VM; os resultados distribuídos
+estão registrados ao final deste documento.
+
+## Preparação inicial — 14/10/2026
 
 Preparação inicial na branch `tutorial/bind9`, promovida à branch `hml` do fork
 para homologação em VM Linux. O PR de identificação de usuários é independente.

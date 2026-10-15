@@ -5,10 +5,12 @@ Site da disciplina de Sistemas Distribuídos e de Tempo Real
 
 O primeiro laboratório é o **BIND 9**, referente à
 [issue #2 do professor](https://github.com/joaoepj2/sistemas-distribuidos-tempo-real/issues/2).
-Com Docker e Compose >= 2.20 instalados, execute `docker compose up -d` na raiz.
-Isso inicia os servidores DNS primário e secundário, nas portas locais 1053 e
-2053 (TCP/UDP). O cliente de consultas roda sob demanda, sem instalar ferramentas
-DNS no host. O ambiente Docker não executa MkDocs.
+Com Docker e Compose >= 2.20 instalados em **dois nós**, configure o `.env`
+com os IPs da LAN e o papel de cada nó conforme o tutorial. Execute
+`docker compose up -d` em cada máquina: um BIND primário no node-1 e um BIND
+secundário no node-2, publicados por padrão em TCP/UDP 53 no IP de cada VM.
+Cada nó precisa de apenas uma interface na mesma rede. O cliente de consultas
+roda sob demanda. O ambiente Docker não executa MkDocs.
 
 - [Ambiente Docker: instalação, verificação e limpeza](docs/ambiente.md)
 - [Fluxo de colaboração pelo fork](docs/colaboracao.md)

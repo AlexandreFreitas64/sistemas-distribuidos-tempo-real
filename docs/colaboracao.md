@@ -78,7 +78,8 @@ e dependência do ambiente Compose da raiz.
 
 Confira a configuração com os comandos do [guia de ambiente](ambiente.md).
 Execute as verificações funcionais, falha, recuperação e limpeza do tutorial.
-A CI inicial verifica o laboratório BIND 9; novos middlewares precisarão de
+A CI verifica os papéis BIND em runners separados; comunicação entre VMs e
+falha de VM exigem homologação real. Novos middlewares precisarão de
 validações próprias. A branch `hml` do fork é usada para homologação nas VMs.
 O envio ao repositório do professor continua sendo uma etapa separada, por PR.
 
