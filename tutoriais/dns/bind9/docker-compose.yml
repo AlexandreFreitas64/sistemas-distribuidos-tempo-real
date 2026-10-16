@@ -1,0 +1,69 @@
+# Um único BIND por máquina. Copie .env.example e configure os IPs da LAN.
+x-ferramentas: &ferramentas
+  image: nicolaka/netshoot:v0.14@sha256:7f08c4aff13ff61a35d30e30c5c1ea8396eac6ab4ce19fd02d5a4b3b5d0d09a2
+  entrypoint: []
+  mem_limit: 128m
+
+x-ambiente: &ambiente
+  BIND_ROLE: ${BIND_ROLE:?Defina BIND_ROLE como primario ou secundario no .env}
+  DNS_PRIMARY_IP: ${DNS_PRIMARY_IP:?Informe o IP LAN do node-1}
+  DNS_SECONDARY_IP: ${DNS_SECONDARY_IP:?Informe o IP LAN do node-2}
+  DNS_BIND_ADDRESS: ${DNS_BIND_ADDRESS:?Informe o IP LAN desta VM}
+  DNS_CLIENT_CIDR: ${DNS_CLIENT_CIDR:?Informe a rede dos clientes em CIDR}
+  DNS_PORT: ${DNS_PORT:-53}
+
+services:
+  configurador:
+    <<: *ferramentas
+    command: [sh, /templates/gerar-config.sh]
+    environment: *ambiente
+    volumes:
+      - ./config:/templates:ro
+      - ./zones:/zonas:ro
+      - configuracao:/generated
+    networks:
+      - laboratorio
+
+  dns:
+    image: ubuntu/bind9:9.20-26.04_stable@sha256:f1a2a62ba28272eccb9efab3ebd2ba910e70edd93dd3c51dd130ba349aa13175
+    entrypoint: [/usr/sbin/named]
+    command: [-g, -n, "2", -c, /etc/bind/named.conf]
+    user: "0:0"
+    mem_limit: 192m
+    restart: unless-stopped
+    depends_on:
+      configurador:
+        condition: service_completed_successfully
+    ports:
+      - "${DNS_BIND_ADDRESS}:${DNS_PORT:-53}:53/udp"
+      - "${DNS_BIND_ADDRESS}:${DNS_PORT:-53}:53/tcp"
+    volumes:
+      - configuracao:/etc/bind:ro
+      - cache:/var/cache/bind
+      - dados:/var/lib/bind
+    networks:
+      - laboratorio
+    healthcheck:
+      test: [CMD, rndc, -c, /etc/bind/shared/rndc.conf, status]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  cliente:
+    <<: *ferramentas
+    profiles: [ferramentas]
+    command: [sh, /testes/verificar.sh, normal]
+    environment: *ambiente
+    volumes:
+      - ./testes:/testes:ro
+    networks:
+      - laboratorio
+
+networks:
+  laboratorio:
+
+volumes:
+  configuracao:
+  cache:
+  dados:
